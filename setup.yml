@@ -1,0 +1,81 @@
+---
+- hosts: web-servers
+  user: vagrant
+  sudo: true
+  gather_facts: false
+
+
+  vars:
+    user: "dev"
+    home: /home/$user
+    nginx_processes: "1"
+    nginx_connections: "512"
+    ssh_port: "22"
+
+  tasks:
+
+    # - name: upgrade yum
+    #   action: command yum upgrade -y
+
+    - name: uninstall lame ruby
+      action: yum name=$item state=absent
+      with_items:
+        - ruby
+        - ruby-devel 
+
+    - name: user setup
+      action: user name=$user password=$user
+
+    - name: setup key
+      # action: authorized_key user=$user key=$FILE(/Users/tobyhede/.ssh/id_rsa.pub) state=present
+      action: authorized_key state=present user=$user key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6jmYqetvUKAzuRgmL9Otfy0xRKnc0TZ2xhwTCno7jBre26EHkrig30qfE3AzUAqi0i/17Nx6UFfMITRarCeQIo8XHYP+IfE6rDIrjwkL++3WEDYn3IUpyU0eawmZkh8EqOVnoJWQPUc7s66HsyLZ/CRrNiKcvX0qTZ4u/wgZ0AiSLtxa53+zcRNdhMmKwPRutyeCbOmO0qbQOZakwMDHVcRDNPcPCTCdN0B4RT/7iPHqS05gflIqgg7NmionRyoFxlAha0n3PYmxITUpKBpWzfmJA0JhTUd//Mhz8uncWsE1z5OxVfejQTMhvqxAAcSvOWnGhdsre/LVhafpkc/d9 tobyh@jobready.com.au"
+
+      # apt-get install -y build-essential zlib1g-dev libssl-dev openssl libcurl4-openssl-dev libreadline6-dev libmysqlclient15-dev git
+      # yum install -y 
+    - name: install all the things        
+      action: yum name=$item state=present
+      with_items:
+        - autoconf 
+        - automake 
+        - bison
+        - bzip2
+        - curl-devel 
+        - gcc-c++ 
+        - glibc
+        - git
+        # - iconv-devel
+        # - libyaml-devel 
+        - libffi-devel 
+        - libtool
+        - make
+        - ntp
+        - openssl-devel 
+        - patch 
+        - pcre
+        - readline 
+        - readline-devel 
+        - sudo
+        - zlib 
+        - zlib-devel 
+
+    - name: suoders
+      # action: yum name=sudo state=present
+      action: template src=templates/sudoers.tmpl dest=/etc/sudoers.d/$user mode=440
+      # echo  >/etc/sudoers.d/jr_deploy
+      # chmod 440 /etc/sudoers.d/jr_deploy
+
+    - name: ntp
+      # action: yum name=ntp state=present
+      action: service name=ntpd state=started enabled=yes
+
+    - name: move timezone file
+      action: command mv /etc/localtime /etc/localtime.bak
+
+    - name: timezone
+      action: file src=/usr/share/zoneinfo/Australia/Sydney  dest=/etc/localtime state=link
+
+      #setup iptables
+    - name: iptables
+      action: template src=templates/iptables.rules dest=/etc/iptables.rules  
+      action: shell /sbin/iptables-restore < /etc/iptables.rules
+      action: service name=iptables state=restarted enabled=yes

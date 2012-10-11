@@ -1,0 +1,188 @@
+---
+- hosts: web-servers
+  user: dev  
+  sudo: true
+  gather_facts: false
+
+  vars:
+    nginx_processes: "1"
+    nginx_connections: "512"
+    user: dev  
+    home: /home/$user
+
+  tasks:
+
+    # wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
+    # wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+    # sudo rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+    # - name: "wtf"
+    #   action: shell sudo rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
+
+    # - name: nginx
+    #   action: yum name=nginx state=absent
+
+    # /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=/opt/nginx --nginx-source-dir=/home/dev/src/nginx-1.2.4 --extra-configure-flags=none
+    # - name: passenger-install-nginx-module
+    #   action: shell /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=$nginx_directory_prefix --nginx-source-dir=$nginx_source_directory --extra-configure-flags=none
+
+    - name: copy 
+      action: copy src=templates/init_nginx.sh dest=/etc/rc.d/init.d/nginx mode=755 state=file
+
+    - name: chkconfig
+      action: shell chkconfig --add nginx
+      action: shell chkconfig nginx on
+
+    - name: service nginx 
+      action: service name=nginx state=started enabled=yes
+
+    - name: create nginx vhosts dir      
+      action: file path=/opt/nginx/conf/vhosts state=directory
+
+    - name: write nginx.conf 
+      action: template src=templates/nginx.conf dest=/opt/nginx/conf/nginx.conf
+
+    - name: create app directory
+      action: file dest=$home/app owner=$user group=$user mode=755 state=directory
+
+    - name: copy index
+      action: copy src=templates/nginx.repo dest=$home/app/index.html owner=$user group=$user mode=755 state=file
+      notify:
+      - restart nginx
+
+  handlers:
+     - name: restart nginx
+       action: service name=nginx state=restarted enabled=yes
+
+
+
+# - hosts: web-servers
+#   user: dev
+#   sudo: false
+#   gather_facts: false
+
+#   vars:
+#     user: "dev"
+#     home: /home/$user
+#     ruby_version: "1.9.3-p194"
+#     nginx_directory_prefix: /opt/nginx
+#     nginx_source_directory: $home/src/nginx-1.2.4
+
+#     # dbname: myapp
+#     # dbuser: django
+#     # dbpassword: mysupersecreetpassword
+
+#   tasks:
+#     # - name: checkout ruby-build 
+#     #   action: git repo=git://github.com/sstephenson/ruby-build.git dest=/home/$user/ruby-build
+
+#     # - name: build ruby-build 
+#     #   action: shell chdir=/home/$user/ruby-build creates=/usr/local/bin/ruby-build sudo ./install.sh 
+
+#     # - name: remove ruby
+#     #   action: shell sudo rm -rf /usr/local/ruby-1.9.3-p194/
+#     #   action: shell sudo rm -rf /usr/local/ruby/$ruby_version
+#     #   action: shell rm -rf $home/local/ruby/$ruby_version
+
+
+#     # - name: install ruby
+#     #   # action: file dest=/usr/local/ruby-1.9.3-p194 mode=744 state=directory
+#     #   action: shell creates=$home/local/ruby/$ruby_version /usr/local/bin/ruby-build $ruby_version $home/local/ruby/$ruby_version
+
+#     # - name: hack the path
+#     #   action: template src=templates/bash_profile.tmpl dest=$home/.bash_profile
+
+#     # - name: set the source
+#       # action: command source ~/.bash_profile
+
+#     # - name: install bundler
+#     #   action: command $home/local/ruby/$ruby_version/bin/gem install bundler --no-rdoc --no-ri
+
+#     # # - name: install bundler
+#     # #   action: shell gem install bundler --no-rdoc --no-ri
+
+#     # - name: install passenger
+#     #   action: command $home/local/ruby/$ruby_version/bin/gem install passenger --no-rdoc --no-ri
+
+#     # - name: create source directory
+#     #   action: file dest=/home/$user/src owner=$user group=$user mode=755 state=directory 
+
+#     # - name: download nginx source
+#     #   action: get_url url=http://nginx.org/download/nginx-1.2.4.tar.gz dest=$home/src/nginx-1.2.4.tar.gz
+
+#     # - name: untar and defeather
+#     #   action: command tar -C ./src -xzvf $home/src/nginx-1.2.4.tar.gz
+
+
+#   handlers:
+#      - name: restart nginx
+#        action: service name=nginx state=restarted enabled=yes
+
+
+
+    # - name: copy index       
+    #   action: file dest=/home/$user/app owner=$user group=$user mode=755 state=directory
+    #   action: copy src=templates/nginx.repo dest=/home/$user/app/index.html owner=$user group=$user mode=755 state=file
+    #   notify:
+    #   - restart nginx
+
+
+    # - name: remove rvm
+    #   action: shell rm -rf ~/.rvm
+    #   # action: shell rm -rf $home/.rvm
+    #   action: shell rm -rf /home/$user/.rvm
+    #   action: shell rm -rf /usr/local/rvm
+
+    # - name: install rvm
+    #   # action: get_url url=https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer dest=/home/$user/rvm-install.sh thirsty=yes mode=555
+    #   # action: shell bash /home/$user/rvm-install.sh stable creates=$home/.rvm
+    #   # action: command sudo -u $user bash /home/$user/rvm-install.sh stable creates=$home/.rvm
+    #   #/usr/local/rvm/
+    #   ignore_errors: true
+    #   # action: shell creates=$home/.rvm \curl -s https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer | sudo -u $user bash -s stable
+    #   action: shell creates=/usr/local/rvm \curl -s https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer | sudo bash -s stable --ruby
+
+    # - name: add $user to rvm group
+    #   action: user name=vagrant groups=rvm
+    #   action: user name=$user groups=rvm
+
+
+    # - name: install ruby
+    #   # action: su $user
+    #   # action: source /etc/profile.d/rvm.sh    
+    #     # action: shell source /etc/profile.d/rvm.sh && rvm install 1.9.3-p194
+    #   action: shell source /etc/profile.d/rvm.sh && command rvm install 1.9.3-p194
+
+
+# - hosts: web-servers
+#   user: vagrant
+#   sudo: true
+#   sudo_user: jobready_development
+#   gather_facts: false
+
+#   tasks:
+#     - name: install ruby
+#       action: su $user
+#       # action: shell sudo -u $user rvm install 1.9.3-p194           
+#       action: shell rvm install 1.9.3-p194
+
+    # - name: logout $user
+      # action: shell logout
+
+    # - name: postgres
+    #   action: postgresql_db db=jobready_development
+    #   action: postgresql_user db=jobready_development user=jrdbuser password= priv=ALL
+
+# yum install -y wget nano
+
+
+# sudo nano /etc/iptables.up.rules 
+# sudo /sbin/iptables-restore < /etc/iptables.up.rules 
+# sudo nano /etc/network/if-pre-up.d/iptables #!/bin/sh /sbin/iptables-restore < /etc/iptables.up.rules
+
+    # - name: "centos nginx repo"          
+    #   action: copy src=templates/nginx.repo dest=/etc/yum.repos.d/nginx.repo mode=0755 
+
+    # - name: nginx
+    #   action: yum name=nginx state=latest
+
+

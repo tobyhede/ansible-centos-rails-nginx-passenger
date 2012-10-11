@@ -1,0 +1,37 @@
+*nat 
+
+-A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080 
+-A OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j REDIRECT --to-ports 8080 
+
+COMMIT
+
+*filter
+
+# Allow traffic already established to continue
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow ssh, dns, ldap, ftp and web services
+
+-A INPUT -p tcp --dport ssh -i eth0 -j ACCEPT
+# -A INPUT -p tcp --dport {{ ssh_port }} -i eth0 -j ACCEPT
+
+-A INPUT -p tcp --dport http -i eth0 -j ACCEPT
+-A INPUT -p tcp --dport 8080 -i eth0 -j ACCEPT
+-A INPUT -p tcp --dport https -i eth0 -j ACCEPT
+
+# Allow local loopback services
+-A INPUT -i lo -j ACCEPT
+-A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
+
+# Allow pings
+
+-I INPUT -p icmp --icmp-type destination-unreachable -j ACCEPT
+-I INPUT -p icmp --icmp-type source-quench -j ACCEPT
+-I INPUT -p icmp --icmp-type time-exceeded -j ACCEPT
+
+-A OUTPUT -j ACCEPT 
+-A INPUT -j REJECT
+-A FORWARD -j REJECT
+
+
+COMMIT
