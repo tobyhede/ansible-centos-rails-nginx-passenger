@@ -17,7 +17,7 @@ Vagrant::Config.run do |config|
   config.vm.provision :ansible do |ansible|
     # point Vagrant at the location of your playbook you want to run
     # ansible.playbook = "setup.yml"
-    ansible.playbook = "web-setup.yml"
+    ansible.playbook = "webservers.yml"
 
 
     # the Vagrant VM will be put in this host group change this should

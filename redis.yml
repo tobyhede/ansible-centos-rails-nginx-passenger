@@ -1,0 +1,59 @@
+- hosts: web-servers
+  user: dev  
+  sudo: true
+  gather_facts: false
+
+  vars:
+    user: dev  
+    home: /home/$user    
+    redis_version: 2.4.17
+    redis_path: /usr/local/bin
+    redis_config_path: /etc/redis
+    redis_loglevel: debug
+    redis_logfile: /var/log/redis.log  
+    redis_dir: $home/redis
+    redis_build_path: $home/src/redis-$redis_version/src/
+
+
+  tasks:
+    - name: create directories
+      action: file dest=$home/src owner=$user group=$user mode=644 state=directory 
+      action: file dest=$redis_path mode=755 state=directory
+      action: file dest=$redis_dir mode=644 state=directory 
+      action: file dest=$redis_config_path mode=644 state=directory 
+
+    - name: get redis
+      action: get_url url=http://redis.googlecode.com/files/redis-$redis_version.tar.gz dest=$home/src/redis-$redis_version.tar.gz
+
+    - name: untar and defeather redis
+      action: command tar -C ./src -xzvf $home/src/redis-$redis_version.tar.gz
+
+    - name: build redis
+      action: shell chdir=$home/src/redis-$redis_version creates=$home/src/redis-server make
+
+    - name: copy redis      
+      action: shell cp $redis_build_path/redis-server $redis_build_path/redis-cli $redis_path
+
+    - name: redis config
+      action: template src=templates/redis.conf dest=$redis_config_path/redis.conf
+
+    - name: copy init
+      action: copy src=files/init_redis.sh dest=/etc/rc.d/init.d/redis-server mode=755 state=file
+
+    - name: chkconfig
+      action: shell chkconfig --add redis-server
+      action: shell chkconfig --level 345 redis-server on
+
+    - name: start redis-server
+      action: service name=redis-server state=started enabled=yes
+
+  handlers:
+     - name: restart redis-server
+       action: service name=redis-server state=restarted enabled=yes
+
+
+# See also: http://www.saltwebsites.com/2012/install-redis-245-service-centos-6
+
+# vi /etc/sysctl.conf (see below):
+# vm.overcommit_memory = 1
+# sysctl vm.overcommit_memory=1 (see below)

@@ -1,58 +1,7 @@
 ---
-- hosts: web-servers
-  user: dev  
-  sudo: true
-  gather_facts: false
-
-  vars:
-    nginx_processes: "1"
-    nginx_connections: "512"
-    user: dev  
-    home: /home/$user
-
-  tasks:
-
-    # wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
-    # wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
-    # sudo rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
-    # - name: "wtf"
-    #   action: shell sudo rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
-
-    # - name: nginx
-    #   action: yum name=nginx state=absent
-
-    # /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=/opt/nginx --nginx-source-dir=/home/dev/src/nginx-1.2.4 --extra-configure-flags=none
-    # - name: passenger-install-nginx-module
-    #   action: shell /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=$nginx_directory_prefix --nginx-source-dir=$nginx_source_directory --extra-configure-flags=none
-
-    - name: copy 
-      action: copy src=templates/init_nginx.sh dest=/etc/rc.d/init.d/nginx mode=755 state=file
-
-    - name: chkconfig
-      action: shell chkconfig --add nginx
-      action: shell chkconfig nginx on
-
-    - name: service nginx 
-      action: service name=nginx state=started enabled=yes
-
-    - name: create nginx vhosts dir      
-      action: file path=/opt/nginx/conf/vhosts state=directory
-
-    - name: write nginx.conf 
-      action: template src=templates/nginx.conf dest=/opt/nginx/conf/nginx.conf
-
-    - name: create app directory
-      action: file dest=$home/app owner=$user group=$user mode=755 state=directory
-
-    - name: copy index
-      action: copy src=templates/nginx.repo dest=$home/app/index.html owner=$user group=$user mode=755 state=file
-      notify:
-      - restart nginx
-
-  handlers:
-     - name: restart nginx
-       action: service name=nginx state=restarted enabled=yes
-
+# - include: ruby.yml
+# - include: nginx.yml
+- include: redis.yml
 
 
 # - hosts: web-servers
@@ -186,3 +135,19 @@
     #   action: yum name=nginx state=latest
 
 
+
+
+
+
+    # wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
+    # wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+    # sudo rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+    # - name: "wtf"
+    #   action: shell sudo rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
+
+    # - name: nginx
+    #   action: yum name=nginx state=absent
+
+    # /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=/opt/nginx --nginx-source-dir=/home/dev/src/nginx-1.2.4 --extra-configure-flags=none
+    # - name: passenger-install-nginx-module
+    #   action: shell /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=$nginx_directory_prefix --nginx-source-dir=$nginx_source_directory --extra-configure-flags=none

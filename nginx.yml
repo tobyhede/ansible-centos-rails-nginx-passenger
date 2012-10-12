@@ -1,0 +1,60 @@
+- hosts: web-servers
+  user: dev  
+  sudo: true
+  gather_facts: false
+
+  vars:
+    user: dev  
+    home: /home/$user
+    nginx_processes: "1"
+    nginx_connections: "512"
+    nginx_prefix: /opt/nginx
+    nginx_src_dir: $home/src/nginx-1.2.4
+    ruby_version: "1.9.3-p194"
+    ruby_path: $home/local/ruby/$ruby_version/bin/
+
+
+  # - include: nginx.yml
+
+  tasks:
+    - name: create source directory
+      action: file dest=/home/$user/src owner=$user group=$user mode=755 state=directory 
+
+    - name: download nginx source
+      action: get_url url=http://nginx.org/download/nginx-1.2.4.tar.gz dest=$home/src/nginx-1.2.4.tar.gz
+
+    - name: untar and defeather
+      action: command tar -C ./src -xzvf $home/src/nginx-1.2.4.tar.gz
+
+    - name: install passenger-nginx
+      action: command $ruby_path/passenger-install-nginx-module --auto --prefix=$nginx_prefix --nginx-source-dir=$nginx_src_dir  --extra-configure-flags=none
+      # /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=/opt/nginx --nginx-source-dir=/home/dev/src/nginx-1.2.4
+
+    - name: copy 
+      action: copy src=templates/init_nginx.sh dest=/etc/rc.d/init.d/nginx mode=755 state=file
+
+    - name: chkconfig
+      action: shell chkconfig --add nginx
+      action: shell chkconfig nginx on
+
+    - name: service nginx 
+      action: service name=nginx state=started enabled=yes
+
+    - name: create nginx vhosts dir      
+      action: file path=/opt/nginx/conf/vhosts state=directory
+
+    - name: write nginx.conf 
+      action: template src=templates/nginx.conf dest=/opt/nginx/conf/nginx.conf
+
+    - name: create app directory
+      action: file dest=$home/app owner=$user group=$user mode=755 state=directory
+
+    - name: copy index
+      action: copy src=templates/nginx.repo dest=$home/app/index.html owner=$user group=$user mode=755 state=file
+      notify:
+      - restart nginx
+
+  handlers:
+     - name: restart nginx
+       action: service name=nginx state=restarted enabled=yes
+
