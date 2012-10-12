@@ -13,6 +13,10 @@ Vagrant::Config.run do |config|
   config.vm.customize ["modifyvm", :id, "--cpus", "1"]
 
   config.vm.forward_port 80, 8080
+  config.vm.forward_port 5432, 5433
+
+  config.vm.share_folder "acc", "/usr/local/src/aac", "/Users/tobyhede/Projects/aac"
+
 
   config.vm.provision :ansible do |ansible|
     # point Vagrant at the location of your playbook you want to run

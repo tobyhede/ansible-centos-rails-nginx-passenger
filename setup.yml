@@ -17,6 +17,9 @@
     - name: upgrade yum
       action: command yum upgrade -y
 
+    - name: vagrant
+      action: shell sudo /etc/init.d/vboxadd setup
+
     - name: uninstall lame ruby
       action: yum name=$item state=absent
       with_items:
@@ -46,6 +49,10 @@
         # - libyaml-devel 
         - libffi-devel 
         - libtool
+        - libxml2 
+        - libxml2-devel 
+        - libxslt 
+        - libxslt-devel
         - make
         - ntp
         - openssl-devel 
@@ -56,6 +63,11 @@
         - sudo
         - zlib 
         - zlib-devel 
+
+# rpm -ivh http://software.freivald.com/centos/software.freivald.com-1.0.0-1.noarch.rpm
+# yum groupinstall Qt4  
+# yum groupinstall Qt4-Devel
+
 
     - name: suoders
       action: yum name=sudo state=present

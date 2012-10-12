@@ -1,0 +1,122 @@
+- hosts: web-servers
+  user: dev  
+  sudo: true
+  gather_facts: false
+
+  vars:
+    user: dev
+    home: /home/$user
+    database: jobready_development  
+    username: jrdbuser
+    password: ""
+    repo_file: /etc/yum.repos.d/CentOS-Base.repo
+
+    # rpm: http://yum.postgresql.org/9.2/redhat/rhel-6-x86_64/pgdg-centos92-9.2-6.noarch.rpm
+    # rpm_url: http://yum.postgresql.org/9.2/redhat/rhel-6-x86_64/pgdg-centos92-9.2-6.noarch.rpm
+
+    rpm: pgdg-centos91-9.1-4.noarch.rpm 
+    rpm_url: http://yum.postgresql.org/9.1/redhat/rhel-6-x86_64/$rpm
+
+  tasks:
+    # - name: setup postgres repo
+    #   action: "shell echo -e '[base]\nexclude=postgresql*' >> $repo_file"
+
+    # - name: setup postgres repo
+    #   action: "shell echo -e '[updates]\nexclude=postgresql*' >> $repo_file"
+
+    # # - name: create source directory
+    # #   action: file dest=/home/$user/src owner=$user group=$user mode=755 state=directory 
+
+    # # - name: do some lame thing
+    # #   action: get_url url=$rpm_url dest=$home/src/$rpm
+
+    # # - name: do another lame thing
+    # #   ignore_errors: true
+    # #   action: shell chdir=$home/src/ rpm -ih $home/src/$rpm 
+    # - name: postgres package
+    #   ignore_errors: true
+    #   action: shell sudo rpm -Uvh $rpm_url
+
+    # - name: install postgresql
+    #   action: yum name=$item state=present
+    #   with_items:
+    #     - postgresql91
+    #     - postgresql91-server
+    #     - postgresql91-devel 
+    #     - postgresql91-libs
+    #     - postgresql91-contrib 
+
+    - name: chkconfig    
+      action: shell chkconfig --level 234 postgresql-9.1 on
+    - action: shell service postgresql-9.1 initdb
+    - action: shell service postgresql-9.1 start
+
+    - name: create dev user  
+      action: shell sudo -u postgres psql -c "CREATE ROLE $username WITH SUPERUSER CREATEDB LOGIN password '$password';"
+
+    # cat > /tmp/postgresjr.sql <<DELIM
+    # CREATE ROLE $username WITH SUPERUSER CREATEDB LOGIN password '$password';
+    # DELIM
+    # su postgres
+    # psql postgres postgres </tmp/postgresjr.sql
+    # exit
+
+
+
+    # action: service name=nginx state=restarted enabled=yes
+    # action: yum name=postgresql91-server state=present
+
+    # - name: epel
+    #   ignore_errors: true
+    #   action: shell sudo rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
+    #     # action shell su -c 'rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-7.noarch.rpm'
+
+    # - name: install python
+    #   action: yum name=$item state=present
+    #   with_items:
+    #     - python26 
+    #     # - python26-PyYAML 
+    #     # - python26-paramiko 
+    #     # - python26-jinja2
+    #   # sudo rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+
+    # - name: psycopg2
+    #   action: easy_install name=psycopg2
+
+    # - name: setup database    
+    #   action: postgresql_db db=$database
+    #   action: postgresql_user db=$database user=$username password=$password priv=ALL
+
+
+# #postgresql
+# cd /tmp
+# wget http://yum.postgresql.org/9.1/redhat/rhel-6-x86_64/pgdg-centos91-9.1-4.noarch.rpm
+# rpm -ivh pgdg-centos91-9.1-4.noarch.rpm
+# cat >> /etc/yum.repos.d/CentOS-Base.repo <<DELIM
+# [base]
+# exclude=postgresql*
+# [updates]
+# exclude=postgresql*
+# DELIM
+# yum install -y postgresql91 postgresql91-devel postgresql91-server postgresql91-libs postgresql91-contrib 
+# service postgresql-9.1 initdb
+# service postgresql-9.1 start
+# chkconfig --level 234 postgresql-9.1 on
+
+# cat > /tmp/postgresjr.sql <<DELIM
+# CREATE ROLE jrdbuser WITH SUPERUSER CREATEDB LOGIN password 'asdfy893kld';
+# DELIM
+# su postgres
+# psql postgres postgres </tmp/postgresjr.sql
+# exit
+
+# #nano /var/lib/pgsql/9.1/data/pg_hba.conf
+# cp /var/lib/pgsql/9.1/data/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf.bak
+# sed -e 's/ ident/ md5/' -e 's/ peer/ md5/' /var/lib/pgsql/9.1/data/pg_hba.conf.bak >/var/lib/pgsql/9.1/data/pg_hba.conf
+# #ensure postgres user can always get in
+# sed -i -e '
+# /TYPE  DATABASE        USER            ADDRESS                 METHOD/ a\
+# local   all   postgres                         ident
+# ' /var/lib/pgsql/9.1/data/pg_hba.conf
+
+# service postgresql-9.1 restart

@@ -1,17 +1,60 @@
 ---
 # - include: ruby.yml
 # - include: nginx.yml
-- include: redis.yml
+# - include: redis.yml
+# - include: postgres.yml
 
 
-# - hosts: web-servers
-#   user: dev
-#   sudo: false
-#   gather_facts: false
+- hosts: web-servers
+  user: dev
+  sudo: true
+  gather_facts: false
 
-#   vars:
-#     user: "dev"
-#     home: /home/$user
+  vars:
+    user: "dev"
+    home: /home/$user
+    # repo: git@github.com:jobready/aac.git
+
+  tasks:
+    - name: link app directory
+      action: file src=/usr/local/src/aac dest=$home/app owner=$user group=$user mode=755 state=link
+
+
+- hosts: web-servers
+  user: dev
+  sudo: false
+  gather_facts: false
+
+  vars:
+    ruby_version: "1.9.3-p194"
+    ruby_path: $home/local/ruby/$ruby_version/bin/
+
+  tasks:
+    # - name: qt package
+    #   ignore_errors: true
+    #   action: shell sudo rpm -ivh http://software.freivald.com/el/6/x86_64/os/software.freivald.com-2.0.0-0.el.noarch.rpm
+
+    # - name: install qt for webkit 
+    #   action: yum name=$item state=present
+    #   with_items:
+    #     - Qt4
+    #     - Qt4-Devel
+
+    - name: bundle
+      # action: shell chdir=$home/app export PATH=$PATH:/usr/lib64/qt4/bin; $ruby_path/bundle
+      action: shell chdir=$home/app $ruby_path/bundle
+
+    # - action: shell chdir=$home/app $ruby_path/bundle
+
+
+
+
+
+    # - name: create app directory
+    #   action: file dest=$home/app owner=$user group=$user mode=755 state=directory
+
+    # - name: checkout project
+    #   action: git repo=$repo dest=$home/app
 #     ruby_version: "1.9.3-p194"
 #     nginx_directory_prefix: /opt/nginx
 #     nginx_source_directory: $home/src/nginx-1.2.4
@@ -133,10 +176,6 @@
 
     # - name: nginx
     #   action: yum name=nginx state=latest
-
-
-
-
 
 
     # wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-7.noarch.rpm
