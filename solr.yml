@@ -1,0 +1,6 @@
+solr
+#ghostscript
+yum install -y ghostscript
+
+#java
+yum install -y java-1.6.0-openjdk java-1.6.0-openjdk-devel

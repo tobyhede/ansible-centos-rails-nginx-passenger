@@ -27,10 +27,16 @@
       action: command tar -C ./src -xzvf $home/src/nginx-1.2.4.tar.gz
 
     - name: install passenger-nginx
-      action: command $ruby_path/passenger-install-nginx-module --auto --prefix=$nginx_prefix --nginx-source-dir=$nginx_src_dir  --extra-configure-flags=none
+      action: command creates=$nginx_prefix $ruby_path/passenger-install-nginx-module --auto --prefix=$nginx_prefix --nginx-source-dir=$nginx_src_dir  --extra-configure-flags=none
       # /home/dev/local/ruby/1.9.3-p194/bin/passenger-install-nginx-module --auto --prefix=/opt/nginx --nginx-source-dir=/home/dev/src/nginx-1.2.4
 
-    - name: copy 
+    - name: create nginx vhosts dir      
+      action: file path=/opt/nginx/conf/vhosts state=directory
+
+    - name: write nginx.conf 
+      action: template src=templates/nginx.conf dest=/opt/nginx/conf/nginx.conf
+
+    - name: copy init
       action: copy src=templates/init_nginx.sh dest=/etc/rc.d/init.d/nginx mode=755 state=file
 
     - name: chkconfig
@@ -40,17 +46,13 @@
     - name: service nginx 
       action: service name=nginx state=started enabled=yes
 
-    - name: create nginx vhosts dir      
-      action: file path=/opt/nginx/conf/vhosts state=directory
 
-    - name: write nginx.conf 
-      action: template src=templates/nginx.conf dest=/opt/nginx/conf/nginx.conf
 
-    - name: create app directory
-      action: file dest=$home/app owner=$user group=$user mode=755 state=directory
+    # - name: create app directory
+      # action: file dest=$home/app owner=$user group=$user mode=755 state=directory
 
-    - name: copy index
-      action: copy src=templates/nginx.repo dest=$home/app/index.html owner=$user group=$user mode=755 state=file
+    # - name: copy index
+      # action: copy src=templates/nginx.repo dest=$home/app/index.html owner=$user group=$user mode=755 state=file
       notify:
       - restart nginx
 

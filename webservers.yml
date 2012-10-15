@@ -1,8 +1,8 @@
 ---
 # - include: ruby.yml
-# - include: nginx.yml
+- include: nginx.yml
 # - include: redis.yml
-# - include: postgres.yml
+- include: postgres.yml
 
 
 - hosts: web-servers
@@ -19,6 +19,9 @@
     - name: link app directory
       action: file src=/usr/local/src/aac dest=$home/app owner=$user group=$user mode=755 state=link
 
+    - name: app-specific packages
+      action: yum name=ghostscript state=present
+
 
 - hosts: web-servers
   user: dev
@@ -27,7 +30,8 @@
 
   vars:
     ruby_version: "1.9.3-p194"
-    ruby_path: $home/local/ruby/$ruby_version/bin/
+    ruby_path: $home/local/ruby/$ruby_version/bin
+    pg_config_path: /usr/pgsql-9.1/bin/pg_config
 
   tasks:
     # - name: qt package
@@ -39,9 +43,9 @@
     #   with_items:
     #     - Qt4
     #     - Qt4-Devel
+    - action: shell chdir=$home/app $ruby_path/bundle config build.pg --with-pg-config=$pg_config_path
 
     - name: bundle
-      # action: shell chdir=$home/app export PATH=$PATH:/usr/lib64/qt4/bin; $ruby_path/bundle
       action: shell chdir=$home/app $ruby_path/bundle
 
     # - action: shell chdir=$home/app $ruby_path/bundle
