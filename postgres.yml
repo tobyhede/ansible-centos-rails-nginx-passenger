@@ -18,47 +18,54 @@
     rpm_url: http://yum.postgresql.org/9.1/redhat/rhel-6-x86_64/$rpm
 
   tasks:
-    # - name: setup postgres repo
-    #   action: "shell echo -e '[base]\nexclude=postgresql*' >> $repo_file"
+    - name: setup postgres repo
+      action: "shell echo -e '[base]\nexclude=postgresql*' >> $repo_file"
 
-    # - name: setup postgres repo
-    #   action: "shell echo -e '[updates]\nexclude=postgresql*' >> $repo_file"
+    - name: setup postgres repo
+      action: "shell echo -e '[updates]\nexclude=postgresql*' >> $repo_file"
 
-    # # - name: create source directory
-    # #   action: file dest=/home/$user/src owner=$user group=$user mode=755 state=directory 
+    # - name: create source directory
+    #   action: file dest=/home/$user/src owner=$user group=$user mode=755 state=directory 
 
-    # # - name: do some lame thing
-    # #   action: get_url url=$rpm_url dest=$home/src/$rpm
+    # - name: do some lame thing
+    #   action: get_url url=$rpm_url dest=$home/src/$rpm
 
-    # # - name: do another lame thing
-    # #   ignore_errors: true
-    # #   action: shell chdir=$home/src/ rpm -ih $home/src/$rpm 
-    # - name: postgres package
+    # - name: do another lame thing
     #   ignore_errors: true
-    #   action: shell sudo rpm -Uvh $rpm_url
+    #   action: shell chdir=$home/src/ rpm -ih $home/src/$rpm 
+    - name: postgres package
+      ignore_errors: true
+      action: shell sudo rpm -Uvh $rpm_url
 
-    # - name: install postgresql postgresql91 postgresql91-server postgresql91-devel postgresql91-libs postgresql91-contrib 
-    #   action: yum name=$item state=present
-    #   with_items:
-    #     - postgresql91
-    #     - postgresql91-server
-    #     - postgresql91-devel 
-    #     - postgresql91-libs
-    #     - postgresql91-contrib 
+    - name: install postgresql postgresql91 postgresql91-server postgresql91-devel postgresql91-libs postgresql91-contrib 
+      action: yum name=$item state=present
+      with_items:
+        - postgresql91
+        - postgresql91-server
+        - postgresql91-devel 
+        - postgresql91-libs
+        - postgresql91-contrib 
 
-    # - name: chkconfig    
-    #   action: shell chkconfig --level 234 postgresql-9.1 on
-    # - action: shell service postgresql-9.1 initdb
-    # - action: shell service postgresql-9.1 start
+    - name: pg conf
+      action: copy src=files/postgresql.conf dest=/var/lib/pgsql/9.1/data/postgresql.conf mode=644 state=file
 
-    # - name: create dev user  
-    #   action: shell sudo -u postgres psql -c "CREATE ROLE $username WITH SUPERUSER CREATEDB LOGIN password '$password';"
+    - name: chkconfig    
+      action: shell chkconfig --level 234 postgresql-9.1 on
+    - action: shell service postgresql-9.1 initdb
+    - action: shell service postgresql-9.1 start
+
+    - name: create dev user  
+      action: template src=templates/pg_create_role.sql dest=/tmp/pg_create_role.sql
+    # action: shell sudo -u postgres psql -c "CREATE ROLE $username WITH SUPERUSER CREATEDB LOGIN password '$password';"  
+    - action: shell sudo -u postgres psql -f /tmp/pg_create_role.sql -o /tmp/pg_create_role.out
+    - action: file path=/tmp/pg_create_role.sql state=absent
 
     - name: setup pg_hba.conf
       action: command cp /var/lib/pgsql/9.1/data/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf.bak
 
-    # - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^local all postgres ident" line="local all postgres ident"
-    - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^host all 127.0.0.1/32 trust" line="host all 127.0.0.1/32 trust"
+
+    - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^local all jrdbuser password" line="local all jrdbuser password"
+    - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^host all jrdbuser 127.0.0.1/32 password" line="host all jrdbuser 127.0.0.1/32 password"
       notify:
         - restart postgresql
 

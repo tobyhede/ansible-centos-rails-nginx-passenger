@@ -1,8 +1,8 @@
 ---
 # - include: ruby.yml
-- include: nginx.yml
+# - include: nginx.yml
 # - include: redis.yml
-- include: postgres.yml
+# - include: postgres.yml
 
 
 - hosts: web-servers
@@ -19,9 +19,11 @@
     - name: link app directory
       action: file src=/usr/local/src/aac dest=$home/app owner=$user group=$user mode=755 state=link
 
+    - name: start postgres
+      action: service name=postgresql-9.1 state=started enabled=yes
+
     - name: app-specific packages
       action: yum name=ghostscript state=present
-
 
 - hosts: web-servers
   user: dev
@@ -29,11 +31,48 @@
   gather_facts: false
 
   vars:
+    user: "dev"
+    home: /home/$user
+    app_path: $home/aac
     ruby_version: "1.9.3-p194"
     ruby_path: $home/local/ruby/$ruby_version/bin
+    bundle: $ruby_path/bundle
+    rake: $ruby_path/rake
     pg_config_path: /usr/pgsql-9.1/bin/pg_config
 
   tasks:
+
+    # - action: shell chdir=$app_path creates=$home/.bundle/config $bundle config build.pg --with-pg-config=$pg_config_path
+
+    # - name: bundle
+    #   action: shell chdir=$app_path $bundle
+
+    - name: rebuild dev environment
+      # action: shell chdir=$app_path sh rebuild_dev.sh
+      action: shell chdir=$app_path $bundle exec $rake db:drop:all
+
+    - action: shell chdir=$app_path $bundle exec $rake db:create:all
+
+    # - action: shell chdir=$app_path $bundle exec $rake db:schema:load
+
+    - action: shell chdir=$app_path $bundle exec $rake db:migrate
+
+    - action: shell chdir=$app_path $bundle exec $rake db:seed
+
+    - action: shell chdir=$app_path $bundle exec $rake sample:load
+
+
+# $ bundle exec rake db:drop:all
+# $ bundle exec rake db:create:all
+# $ bundle exec rake db:schema:load
+# $ bundle exec rake db:seed
+# $ bundle exec rake sample:load # Only works for development env
+
+# $ ruby script/updateLogins.rb # Please make sure you enter RTI credentials
+# $ ruby script/rails runner -e development 'TyimsBdeDownload.run_full'
+# $ ruby script/update_registration_contact_plan.rb
+
+
     # - name: qt package
     #   ignore_errors: true
     #   action: shell sudo rpm -ivh http://software.freivald.com/el/6/x86_64/os/software.freivald.com-2.0.0-0.el.noarch.rpm
@@ -43,14 +82,6 @@
     #   with_items:
     #     - Qt4
     #     - Qt4-Devel
-    - action: shell chdir=$home/app $ruby_path/bundle config build.pg --with-pg-config=$pg_config_path
-
-    - name: bundle
-      action: shell chdir=$home/app $ruby_path/bundle
-
-    # - action: shell chdir=$home/app $ruby_path/bundle
-
-
 
 
 
