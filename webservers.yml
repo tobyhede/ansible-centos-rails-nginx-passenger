@@ -1,8 +1,9 @@
 ---
+# - include: setup.yml
 # - include: ruby.yml
 # - include: nginx.yml
-# - include: redis.yml
-# - include: postgres.yml
+- include: redis.yml
+- include: postgres.yml
 
 
 - hosts: web-servers
@@ -18,6 +19,10 @@
   tasks:
     - name: link app directory
       action: file src=/usr/local/src/aac dest=$home/app owner=$user group=$user mode=755 state=link
+
+    - name: set no-doc for gems
+      # action: shell echo "gem: --no-rdoc --no-ri" >> /etc/gemrc
+      action: copy src=files/gemrc dest=/etc/gemrc state=file
 
     - name: start postgres
       action: service name=postgresql-9.1 state=started enabled=yes

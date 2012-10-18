@@ -24,7 +24,7 @@
       action: get_url url=http://nginx.org/download/nginx-1.2.4.tar.gz dest=$home/src/nginx-1.2.4.tar.gz
 
     - name: untar and defeather
-      action: command tar -C ./src -xzvf $home/src/nginx-1.2.4.tar.gz
+      action: command creates=$home/src/nginx-1.2.4 tar -C ./src -xzvf $home/src/nginx-1.2.4.tar.gz
 
     - name: install passenger-nginx
       action: command creates=$nginx_prefix $ruby_path/passenger-install-nginx-module --auto --prefix=$nginx_prefix --nginx-source-dir=$nginx_src_dir  --extra-configure-flags=none

@@ -1,7 +1,7 @@
 require 'vagrant-ansible'
 
 Vagrant::Config.run do |config|
-  config.vm.box = "CentOS-6.0-x86_64.box"
+  config.vm.box = "CentOS-6.0-x86_64"
 
   config.vm.customize ["modifyvm", :id, "--memory", "256"]
 

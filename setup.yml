@@ -14,17 +14,20 @@
 
   tasks:
 
-    - name: upgrade yum
-      action: command yum upgrade -y
+    - name: hello world 
+      action: command echo "hello world"
+
+    # - name: upgrade yum
+    #   action: command yum upgrade -y
 
     - name: vagrant
       action: shell sudo /etc/init.d/vboxadd setup
 
-    - name: uninstall lame ruby
-      action: yum name=$item state=absent
-      with_items:
-        - ruby
-        - ruby-devel 
+    # - name: uninstall lame ruby
+    #   action: yum name=$item state=absent
+    #   with_items:
+    #     - ruby
+    #     - ruby-devel 
 
     - name: user setup
       action: user name=$user password=$user

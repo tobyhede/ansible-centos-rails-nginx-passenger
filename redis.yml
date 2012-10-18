@@ -11,22 +11,22 @@
     redis_config_path: /etc/redis
     redis_loglevel: debug
     redis_logfile: /var/log/redis.log  
-    redis_dir: $home/redis
-    redis_build_path: $home/src/redis-$redis_version/src/
+    redis_dir: /etc/redis/data
+    redis_build_path: $home/src/redis-$redis_version/src
 
 
   tasks:
     - name: create directories
       action: file dest=$home/src owner=$user group=$user mode=644 state=directory 
       action: file dest=$redis_path mode=755 state=directory
-      action: file dest=$redis_dir mode=644 state=directory 
+      action: file dest=$redis_dir mode=755 state=directory 
       action: file dest=$redis_config_path mode=644 state=directory 
 
     - name: get redis
       action: get_url url=http://redis.googlecode.com/files/redis-$redis_version.tar.gz dest=$home/src/redis-$redis_version.tar.gz
 
     - name: untar and defeather redis
-      action: command tar -C ./src -xzvf $home/src/redis-$redis_version.tar.gz
+      action: command creates=$home/src/redis-$redis_version tar -C ./src -xzvf $home/src/redis-$redis_version.tar.gz
 
     - name: build redis
       action: shell chdir=$home/src/redis-$redis_version creates=$home/src/redis-server make

@@ -25,9 +25,6 @@
     - name: install ruby
       action: shell creates=$home/local/ruby/$ruby_version /usr/local/bin/ruby-build $ruby_version $home/local/ruby/$ruby_version
 
-    - name: disbale gem cruft
-      action: shell echo "gem: --no-rdoc --no-ri" >> /etc/gemrc
-
     - name: hack the path
       action: template src=templates/bash_profile.tmpl dest=$home/.bash_profile
 

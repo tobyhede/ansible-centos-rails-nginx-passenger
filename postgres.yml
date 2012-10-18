@@ -63,11 +63,15 @@
     - name: setup pg_hba.conf
       action: command cp /var/lib/pgsql/9.1/data/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf.bak
 
-
-    - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^local all jrdbuser password" line="local all jrdbuser password"
-    - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^host all jrdbuser 127.0.0.1/32 password" line="host all jrdbuser 127.0.0.1/32 password"
+    - name: copy pg_hba.conf
+      action: copy src=files/pg_hba.conf dest=/var/lib/pgsql/9.1/data/pg_hba.conf backup=on      
       notify:
         - restart postgresql
+        
+    # - name: setup pg_hba.conf
+    #   action: command cp /var/lib/pgsql/9.1/data/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf.bak
+    # - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^local all jrdbuser password" line="local all jrdbuser password"
+    # - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^host all jrdbuser 127.0.0.1/32 password" line="host all jrdbuser 127.0.0.1/32 password"
 
   handlers:
     - name: restart postgresql
