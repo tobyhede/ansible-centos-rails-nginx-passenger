@@ -31,8 +31,11 @@
     - name: build redis
       action: shell chdir=$home/src/redis-$redis_version creates=$home/src/redis-server make
 
-    - name: copy redis      
-      action: shell cp $redis_build_path/redis-server $redis_build_path/redis-cli $redis_path
+    - name: copy redis        
+      action: command cp $redis_build_path/redis-server $redis_path
+      action: command cp $redis_build_path/redis-cli $redis_path
+      # action: copy src=$redis_build_path/redis-server dest=$redis_path/redis-server state=file
+      # action: copy src=$redis_build_path/redis-cli dest=$redis_path/redis-cli state=file
 
     - name: redis config
       action: template src=templates/redis.conf dest=$redis_config_path/redis.conf
