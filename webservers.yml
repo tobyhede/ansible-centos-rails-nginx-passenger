@@ -54,7 +54,7 @@
 
     - name: rebuild dev environment
       # action: shell chdir=$app_path sh rebuild_dev.sh
-      action: shell chdir=$app_path $bundle exec $rake db:drop:all
+      action: shell chdir=$app_path PATH=$ruby_path:$PATH bundle exec rake db:drop:all
 
     - action: shell chdir=$app_path $bundle exec $rake db:create:all
 

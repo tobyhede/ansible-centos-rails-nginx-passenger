@@ -46,13 +46,18 @@
         - postgresql91-libs
         - postgresql91-contrib 
 
+    - name: chkconfig    
+      action: shell chkconfig --level 234 postgresql-9.1 on
+
+    - name: initdb    
+      action: shell creates=/var/lib/pgsql/9.1/data/ service postgresql-9.1 initdb
+
     - name: pg conf
       action: copy src=files/postgresql.conf dest=/var/lib/pgsql/9.1/data/postgresql.conf mode=644 state=file
 
-    - name: chkconfig    
-      action: shell chkconfig --level 234 postgresql-9.1 on
-    - action: shell service postgresql-9.1 initdb
-    - action: shell service postgresql-9.1 start
+
+    - name: start
+      action: shell service postgresql-9.1 start
 
     - name: create dev user  
       action: template src=templates/pg_create_role.sql dest=/tmp/pg_create_role.sql
@@ -67,7 +72,7 @@
       action: copy src=files/pg_hba.conf dest=/var/lib/pgsql/9.1/data/pg_hba.conf backup=on      
       notify:
         - restart postgresql
-        
+
     # - name: setup pg_hba.conf
     #   action: command cp /var/lib/pgsql/9.1/data/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf.bak
     # - action: lineinfile dest=/var/lib/pgsql/9.1/data/pg_hba.conf state=present regexp="^local all jrdbuser password" line="local all jrdbuser password"
