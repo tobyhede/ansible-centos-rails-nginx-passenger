@@ -2,7 +2,7 @@
 # - include: setup.yml
 # - include: ruby.yml
 # - include: nginx.yml
-# - include: redis.yml
+- include: redis.yml
 - include: postgres.yml
 
 
