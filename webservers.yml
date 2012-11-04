@@ -1,9 +1,9 @@
 ---
 # - include: setup.yml
-# - include: ruby.yml
-# - include: nginx.yml
-- include: redis.yml
-- include: postgres.yml
+- include: ruby.yml
+- include: nginx.yml
+# - include: redis.yml
+# - include: postgres.yml
 
 
 - hosts: web-servers
@@ -30,6 +30,7 @@
     - name: app-specific packages
       action: yum name=ghostscript state=present
 
+
 - hosts: web-servers
   user: dev
   sudo: false
@@ -39,6 +40,7 @@
     user: "dev"
     home: /home/$user
     app_path: $home/aac
+    hello_world_path: $home/hello_world
     ruby_version: "1.9.3-p194"
     ruby_path: $home/local/ruby/$ruby_version/bin
     bundle: $ruby_path/bundle
@@ -47,24 +49,33 @@
 
   tasks:
 
+    - name: hello world
+      action: shell chdir=$home creates=$home/hello_world PATH=$ruby_path rails new hello_world
+
+    - name: bundle
+      action: shell chdir=$home/hello_world PATH=$ruby_path:$PATH bundle
+
+    - name: restart nginx
+      action: command sudo service nginx restart
+
     # - action: shell chdir=$app_path creates=$home/.bundle/config $bundle config build.pg --with-pg-config=$pg_config_path
 
     # - name: bundle
     #   action: shell chdir=$app_path $bundle
 
-    - name: rebuild dev environment
-      # action: shell chdir=$app_path sh rebuild_dev.sh
-      action: shell chdir=$app_path PATH=$ruby_path:$PATH bundle exec rake db:drop:all
+    # - name: rebuild dev environment
+    #   # action: shell chdir=$app_path sh rebuild_dev.sh
+    #   action: shell chdir=$app_path PATH=$ruby_path:$PATH bundle exec rake db:drop:all
 
-    - action: shell chdir=$app_path $bundle exec $rake db:create:all
+    # - action: shell chdir=$app_path $bundle exec $rake db:create:all
 
-    # - action: shell chdir=$app_path $bundle exec $rake db:schema:load
+    # # - action: shell chdir=$app_path $bundle exec $rake db:schema:load
 
-    - action: shell chdir=$app_path $bundle exec $rake db:migrate
+    # - action: shell chdir=$app_path $bundle exec $rake db:migrate
 
-    - action: shell chdir=$app_path $bundle exec $rake db:seed
+    # - action: shell chdir=$app_path $bundle exec $rake db:seed
 
-    - action: shell chdir=$app_path $bundle exec $rake sample:load
+    # - action: shell chdir=$app_path $bundle exec $rake sample:load
 
 
 # $ bundle exec rake db:drop:all

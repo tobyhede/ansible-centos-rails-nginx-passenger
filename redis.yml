@@ -31,6 +31,10 @@
     - name: build redis
       action: shell chdir=$home/src/redis-$redis_version creates=$redis_build_path/redis-server make
 
+    - name: stop redis-server
+      ignore_errors: true
+      action: service name=redis-server state=stop enabled=yes
+
     - name: copy redis        
       action: command cp $redis_build_path/redis-server $redis_path
     - action: command cp $redis_build_path/redis-cli $redis_path

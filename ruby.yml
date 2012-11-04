@@ -7,7 +7,7 @@
   vars:
     user: "dev"
     home: /home/$user
-    ruby_version: "1.9.3-p194"
+    ruby_version: "1.9.3-p286"
     ruby_path: $home/local/ruby/$ruby_version/bin/
 
   tasks:
@@ -37,6 +37,8 @@
     - name: install passenger
       action: command $ruby_path/gem install passenger --no-rdoc --no-ri
 
+    - name: install bundler
+      action: command $ruby_path/gem install rails --no-rdoc --no-ri
 
 
 

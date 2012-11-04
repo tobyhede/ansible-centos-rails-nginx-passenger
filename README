@@ -1,0 +1,4 @@
+ansible-centos-rails-nginx-passenger
+====================================
+
+Sample ansible playbook for building vagrant-friendly rails stack on top of nginx and passenger. 
